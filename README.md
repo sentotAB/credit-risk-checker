@@ -2,7 +2,7 @@
 
 A new Flutter project.
 
-[text](demo.png)
+![alt text](demo.png)
 
 # Credit Risk Checker v0.1.0
 
