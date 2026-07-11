@@ -17,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Kredensial demo — ganti dengan autentikasi nyata di produksi.
+  // Kredensial demo
   static const _demoEmail = 'admin';
   static const _demoPassword = '123';
 
@@ -74,23 +74,11 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1.5,
-                        ),
+                    Image.asset(
+                      'images/fast_money_icon_1024x1024.png',
+                      width: 128,
+                      height: 128,
                       ),
-                      child: const Icon(
-                        Icons.account_balance_rounded,
-                        color: Colors.white,
-                        size: 36,
-                      ),
-                    ),
                     const SizedBox(height: 16),
                     const Text(
                       'Credit Risk Checker',

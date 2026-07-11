@@ -1,7 +1,29 @@
 import 'package:flutter/material.dart';
-import '../pages/login_page.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:credit_risk_v1/services/notification_service.dart';
+import 'package:credit_risk_v1/services/push_notification_service.dart';
+import '../pages/splash_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // 1) Local notification: hanya relevan untuk Android/iOS.
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  //    flutter_local_notifications tidak punya implementasi untuk web,
+  //    jadi kalau dipanggil di web akan throw dan runApp() tidak pernah
+  //    tercapai -> UI blank di browser.
+ if (!kIsWeb) {
+    await NotificationService.instance.init();
+  }
+  // 2) Push notification: inisialisasi Firebase + FCM (token, listener
+  //    onMessage, & background handler). Lihat
+  //    lib/services/push_notification_service.dart untuk detail & catatan
+  //    integrasi backend yang masih perlu disiapkan.
+  await PushNotificationService.instance.init();
   runApp(const CreditRiskApp());
 }
 
@@ -58,7 +80,7 @@ class CreditRiskApp extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
-      home: const LoginPage(),
+      home: const SplashPage(),
     );
   }
 }

@@ -1,4 +1,6 @@
 import 'package:credit_risk_v1/utils/formatters.dart';
+import 'package:credit_risk_v1/utils/next_step_message.dart';
+import 'package:credit_risk_v1/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/sample_data.dart';
@@ -54,6 +56,51 @@ class _HomePageState extends State<HomePage> {
       _searched = true;
       _foundNasabah = found.isEmpty ? null : found;
     });
+
+    if (_foundNasabah != null) {
+      final isApproved = _foundNasabah!['TARGET'] == 0;
+      _notifyDecision(isApproved);
+    }
+  }
+/// Memicu notifikasi "langkah berikutnya" saat status "Disetujui" atau
+  /// "Ditolak" diketahui. Ada 2 kanal yang jalan langsung dari client:
+  /// 1. In-app banner — langsung terlihat karena user sedang aktif di app.
+  /// 2. Local notification — tetap muncul walau app di-minimize/background.
+  /// Kanal ke-3 (push notification via FCM) dipicu dari SERVER saat
+  /// keputusan kredit dibuat — lihat services/push_notification_service.dart.
+  void _notifyDecision(bool isApproved) {
+    _showInAppBanner(isApproved);
+    NotificationService.instance.showStatusNotification(
+      isApproved: isApproved,
+    );
+  }
+
+  void _showInAppBanner(bool isApproved) {
+    final messenger = ScaffoldMessenger.of(context);
+    final statusColor =
+        isApproved ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+    final bgColor =
+        isApproved ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2);
+
+    messenger
+      ..hideCurrentMaterialBanner()
+      ..showMaterialBanner(
+        MaterialBanner(
+          backgroundColor: bgColor,
+          leading: Icon(Icons.notifications_active_rounded,
+              color: statusColor),
+          content: Text(
+            NextStepMessage.forStatus(isApproved),
+            style: TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => messenger.hideCurrentMaterialBanner(),
+              child: Text('Tutup', style: TextStyle(color: statusColor)),
+            ),
+          ],
+        ),
+      );
   }
 
   void _logout() {
@@ -259,7 +306,7 @@ class _GreetingCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Selamat datang, Admin 👋',
+            'Selamat datang, Admin ',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,

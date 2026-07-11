@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "623326298726",
+    "project_id": "credit-risk-checker-v1",
+    "storage_bucket": "credit-risk-checker-v1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623326298726:android:0300e09581d8cf1235a3a7",
+        "android_client_info": {
+          "package_name": "com.example.credit_risk_v1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPYqgCz7IfOUtslzJi6Mv82-y-3xaD2YY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
