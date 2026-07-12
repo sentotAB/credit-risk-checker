@@ -40,6 +40,14 @@ dependencies:
   firebase_core: ^4.11.0 # dibutuhkan oleh firebase_messaging
   firebase_messaging: ^16.3.0 # push notification (FCM)
 
+  # Local storage: menyimpan sesi login di perangkat
+  shared_preferences: ^2.3.3
+
+  # untuk Firestore REST API
+  http: ^1.2.0   
+
+  logging: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

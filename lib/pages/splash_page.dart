@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
+import 'home_page.dart';
+import '../services/authentication_service.dart';
 
-/// Halaman pembuka yang menampilkan logo dengan animasi singkat sebelum
-/// otomatis berpindah ke [LoginPage].
+/// Halaman pembuka yang menampilkan logo dengan animasi singkat, lalu
+/// mengecek sesi login tersimpan (local storage) sebelum menentukan
+/// halaman tujuan: [HomePage] kalau sudah login sebelumnya, atau
+/// [LoginPage] kalau belum.
 ///
 /// Animasi: logo muncul dengan efek scale (membesar dari kecil, sedikit
 /// "memantul" di akhir) dibarengi fade-in, lalu nama aplikasi fade-in
@@ -58,19 +62,24 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    // Setelah animasi selesai + jeda singkat, pindah ke LoginPage.
-    Future.delayed(const Duration(seconds: 10), () {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
-    });
+     // Setelah animasi selesai + jeda singkat, cek sesi login (local
+    // storage) lalu arahkan ke halaman yang sesuai.
+    Future.delayed(const Duration(seconds: 10), _navigateNext);
   }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+ 
+  Future<void> _navigateNext() async {
+    if (!mounted) return;
+ 
+    // Local storage: cek apakah user masih dalam sesi login sebelumnya.
+    final isLoggedIn = await AuthService.instance.isLoggedIn();
+ 
+    if (!mounted) return;
+ 
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => isLoggedIn ? const HomePage() : const LoginPage(),
+      ),
+    );
   }
 
   @override

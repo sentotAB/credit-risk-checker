@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import '../services/authentication_service.dart';
 
 /// Halaman login sederhana dengan validasi email & password.
-/// Kredensial demo: admin@kreditku.id / admin123
+/// Kredensial demo: admin / 123
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -48,6 +49,11 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (email == _demoEmail && password == _demoPassword) {
+      // Local storage: simpan sesi login supaya tidak perlu login ulang
+      // saat aplikasi dibuka/refresh kembali (dicek dari SplashPage).
+      await AuthService.instance.saveLoginSession(userName: email);
+ 
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomePage()),
