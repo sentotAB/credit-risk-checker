@@ -1,10 +1,12 @@
 import 'package:credit_risk_v1/utils/formatters.dart';
 import 'package:credit_risk_v1/utils/next_step_message.dart';
 import 'package:credit_risk_v1/services/notification_service.dart';
+import 'package:credit_risk_v1/services/authentication_service.dart';
+import 'package:credit_risk_v1/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../data/sample_data.dart';
 import 'login_page.dart';
+import '../models/nasabah.dart';
 
 /// Halaman utama aplikasi KreditKu.
 /// Fitur utama: Quick Credit Check — cari nasabah by ID dan tampilkan status.
@@ -21,10 +23,34 @@ class _HomePageState extends State<HomePage> {
   bool _searched = false;
   bool _isLoading = false;
 
-  int get _totalApproved =>
-      sampleCreditData.where((d) => d['TARGET'] == 0).length;
-  int get _totalRejected =>
-      sampleCreditData.where((d) => d['TARGET'] == 1).length;
+List<Nasabah> _semuaNasabah = [];
+  bool _isLoadingStats = true;
+
+  int get _totalApproved => _semuaNasabah.where((n) => n.target == 0).length;
+  int get _totalRejected => _semuaNasabah.where((n) => n.target == 1).length;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNasabahData();
+  }
+
+  Future<void> _loadNasabahData() async {
+    try {
+      final data = await FirestoreService.getAllNasabah();
+      if (!mounted) return;
+      setState(() {
+        _semuaNasabah = data;
+        _isLoadingStats = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingStats = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data nasabah: $e')),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -32,7 +58,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<void> _search() async {
+Future<void> _search() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
@@ -42,19 +68,20 @@ class _HomePageState extends State<HomePage> {
       _foundNasabah = null;
     });
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 300));
 
-    final found = sampleCreditData.firstWhere(
-      (d) =>
-          d['SK_ID_CURR'] == query ||
-          (d['NAMA'] as String).toLowerCase().contains(query.toLowerCase()),
-      orElse: () => {},
-    );
+    final matches = _semuaNasabah.where(
+      (n) =>
+          n.skIdCurr == query ||
+          n.nama.toLowerCase().contains(query.toLowerCase()),
+    ).toList();
+
+    final foundNasabah = matches.isNotEmpty ? matches.first : null;
 
     setState(() {
       _isLoading = false;
       _searched = true;
-      _foundNasabah = found.isEmpty ? null : found;
+      _foundNasabah = foundNasabah?.toLegacyMap();
     });
 
     if (_foundNasabah != null) {
@@ -128,12 +155,13 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     const SizedBox(height: 20),
 
-                    // Greeting card
-                    _GreetingCard(
-                      totalApproved: _totalApproved,
-                      totalRejected: _totalRejected,
-                      total: sampleCreditData.length,
-                    ),
+                      _isLoadingStats
+                        ? const _GreetingCardSkeleton()
+                        : _GreetingCard(
+                            totalApproved: _totalApproved,
+                            totalRejected: _totalRejected,
+                            total: _semuaNasabah.length,
+                          ), 
 
                     const SizedBox(height: 24),
 
@@ -172,12 +200,14 @@ class _HomePageState extends State<HomePage> {
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
                                       icon: const Icon(Icons.clear, size: 18),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        setState(() {
-                                          _searched = false;
-                                          _foundNasabah = null;
-                                        });
+                                      onPressed: () async {
+                                        await AuthService.instance.clearSession();
+                                        if (!context.mounted) return;
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                                          (route) => false,
+                                        );
                                       },
                                     )
                                   : null,
@@ -347,6 +377,24 @@ class _GreetingCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GreetingCardSkeleton extends StatelessWidget {
+  const _GreetingCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 168,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A237E).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
       ),
     );
   }

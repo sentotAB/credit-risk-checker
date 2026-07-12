@@ -1,6 +1,6 @@
-# credit_risk_v1
+# Credit Risk Checker v0.3.0
 
-Aplikasi Flutter digunakan oleh staff perusahaan pembiayaan/kredit (loan officer, credit analyst, admin) untuk menganalisis risiko kredit nasabah, dengan dukungan fitur tambahan berupa notifikasi status pengajuan diterima / ditolak. 
+Aplikasi Flutter digunakan oleh staff perusahaan pembiayaan/kredit (loan officer, credit analyst, admin) untuk menganalisis risiko kredit nasabah, mencakup **halaman login**, **halaman utama**, **fitur Quick Credit Check**, serta **sistem notifikasi 3 kanal** (in-app banner, local notification, dan push notification via Firebase Cloud Messaging). Dengan dukungan fitur tambahan berupa notifikasi status pengajuan diterima / ditolak, local storage, dan REST API ke database firestore. 
 
 Aplikasi dapat di lihat melalui web browser Chrome/Edge/Safari di https://credit-risk-checker-v1.web.app/.
 Untuk login dapat mengisi :
@@ -9,9 +9,6 @@ Untuk login dapat mengisi :
 
 Untuk melakukan Cek Kredit Cepat dapat memasukkan **ID nasabah** (Contoh: **1004**) atau **nama** (Contoh. **Sari**) lalu klik tombol **Cek**.
 
-# Credit Risk Checker v0.2.0
-
-Aplikasi Flutter untuk menganalisis risiko kredit nasabah. Mencakup **halaman login**, **halaman utama**, **fitur Quick Credit Check**, serta **sistem notifikasi 3 kanal** (in-app banner, local notification, dan push notification via Firebase Cloud Messaging).
 
 ---
 
@@ -22,18 +19,40 @@ Aplikasi Flutter untuk menganalisis risiko kredit nasabah. Mencakup **halaman lo
   <tr>
     <td align="center"><b>Splash</b></td>
     <td align="center"><b>Login</b></td>
-    <td align="center"><b>Notifikasi Disetujui</b></td>
-    <td align="center"><b>Notifikasi Ditolak</b></td>
   </tr>
   <tr>
     <td><img src="assets/images/tampilan1.png" width="512"/></td>
     <td><img src="assets/images/tampilan2.png" width="512"/></td>
+  </tr>
+</table>
+
+
+## Tampilan Notifikasi
+
+<table>
+  <tr>
+    <td align="center"><b>Notifikasi Disetujui</b></td>
+    <td align="center"><b>Notifikasi Ditolak</b></td>
+  </tr>
+  <tr>
     <td><img src="assets/images/tampilan3.png" width="512"/></td>
     <td><img src="assets/images/tampilan4.png" width="512"/></td>
   </tr>
 </table>
 
+## Database Firestore menggunakan REST API
 
+
+<table>
+  <tr>
+    <td align="center"><b>Database Metrics</b></td>
+    <td align="center"><b>Database Table</b></td>
+  </tr>
+  <tr>
+    <td><img src="assets/images/database_firestore_metrics.png" width="512"/></td>
+    <td><img src="assets/images/database_firestore_table.png" width="512"/></td>
+  </tr>
+</table>
 
 Saat status pengajuan diketahui, banner notifikasi muncul di bagian atas halaman (hijau untuk disetujui, merah untuk ditolak) dan tetap tampil sampai pengguna menekan tombol **Tutup**.
 
@@ -45,12 +64,17 @@ Saat status pengajuan diketahui, banner notifikasi muncul di bagian atas halaman
 lib/
 ├── main.dart                          # Entry point, inisialisasi Firebase & notifikasi, tema aplikasi
 ├── data/
-│   └── sample_data.dart               # 100 data nasabah demo (ID 1001–1100)
-├── pages/
+│   └── sample_data.dart               # 100 data nasabah hanya untuk demo, bila tidak menggunakan firestore (ID 1001–1100)
+│   ├── models/
+│   │   └── nasabah.dart               # Model class untuk data nasabah, sesuai struktur field di Firestore  
+├── pages/  
+│   ├── daftar_nasabah_page.dart       # Page yang menampilkan daftar nasabah dari Firestore
 │   ├── login_page.dart                # Halaman login
 │   └── home_page.dart                 # Halaman utama + Quick Check + in-app banner
 │   └── splash_page.dart               # Tampilan pembuka dengan animasi logo bergerak
 ├── services/
+│   ├── authentication_service.dart    # local storage / SharedPreferences 
+│   ├── firestore_service.dart         # getAllNasabah(), getNasabahById()
 │   ├── notification_service.dart      # Wrapper flutter_local_notifications (Android/iOS)
 │   └── push_notification_service.dart # Wrapper Firebase Cloud Messaging (semua platform)
 └── utils/
@@ -59,6 +83,12 @@ lib/
 
 web/
 └── firebase-messaging-sw.js           # Service worker untuk push notification saat tab di-background
+
+
+[TERPISAH, di luar project Flutter ini]
+seed_project/                          # folder mandiri, sudah tidak perlu dijalankan lagi, kecuali mau reset/tambah data ulang
+├── seed_firestore.dart                     
+└── pubspec.yaml
 ```
 
 ---
@@ -115,6 +145,24 @@ Project ini menggunakan Firebase Cloud Messaging untuk push notification. Sebelu
 
 ---
 
+## Firestore
+
+Project ini menggunakan Cloud Firestore sebagai database nasabah, diakses langsung lewat REST API (tanpa Firebase Auth / tanpa package cloud_firestore), sesuai isi firestore_service.dart dan seed_firestore.dart.
+
+Base URL REST  
+https://firestore.googleapis.com/v1/projects/credit-risk-checker-v1/databases/(default)/documents
+
+Collection
+nasabah
+
+Document ID
+SK_ID_CURR (string)
+
+Auth
+Tanpa auth (Security Rules dalam test mode)
+
+
+
 ## Cara Menjalankan
 
 ```bash
@@ -140,6 +188,9 @@ flutter run -d chrome
 - `flutter_local_notifications: ^21.0.0`
 - `firebase_core: ^4.11.0`
 - `firebase_messaging: ^16.3.0`
+- `shared_preferences: ^2.3.3`
+- `http: ^1.2.0`
+- `logging: ^1.2.0`
 
 ---
 
@@ -148,17 +199,10 @@ flutter run -d chrome
 | Versi | Fitur |
 |-------|-------|
 | v0.1.0 | Login, Home, Quick Credit Check |
-| v0.2.0 (sekarang) | Notifikasi 3 kanal (in-app, local, push FCM) |
-| v0.3.0 | Daftar nasabah lengkap + filter |
-| v0.4.0 | Halaman detail nasabah |
-| v1.0.0 | Integrasi real API + autentikasi JWT + registrasi token FCM ke backend |
+| v0.2.0 | Notifikasi 3 kanal (in-app, local, push FCM) |
+| v0.3.0 (sekarang) | Database nasabah di Firestore dan menggunakan REST API |
 
 ---
-
-## Catatan
-- Data yang digunakan bersifat **simulasi** (100 nasabah demo, ID 1001–1100).
-- Autentikasi saat ini hanya untuk demo; ganti **Kredensial demo:** `admin` / `123`.
-- Backend untuk mengirim push notification (Cloud Function/server) **belum termasuk** di repo ini — lihat bagian Konfigurasi Firebase di atas untuk langkah integrasinya.
 
 
 #### Dibuat oleh Sentot Ali Basah
